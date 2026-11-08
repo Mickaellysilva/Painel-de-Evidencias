@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6d28d9">
+<meta name="color-scheme" content="light">
+<title>Painel de Evidências</title>
+<style>
+:root{
+  --bg:#faf8ff;--card:#ffffff;--ink:#241b3a;--muted:#6b6385;--line:#e6e0f5;
+  --accent:#6d28d9;--accent-ink:#ffffff;--soft:#f0e9fd;--warn:#b45309;--warn-soft:#fdf0dc;--bad:#b42318;
+  --c1:#6d28d9;--c2:#d97706;--c3:#0e7490;--c4:#db2777;--c5:#2563eb;
+}
+*{box-sizing:border-box}
+body{border-top:5px solid var(--accent);margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:16px 20px 0;max-width:1100px;margin:0 auto}
+header h1{margin:0;font-size:20px;color:var(--accent)}
+header p{margin:2px 0 12px;color:var(--muted);font-size:13px}
+nav{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--muted);cursor:pointer}
+nav button.on{color:var(--accent);border-color:var(--accent);font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:18px 20px 60px}
+h2{font-size:17px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{color:var(--muted);font-size:13px}
+.card h3{margin:0 0 2px;font-size:15px}
+.meta{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+.field-lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.field-txt{white-space:pre-wrap;font-size:14px}
+.tag{display:inline-block;background:var(--soft);color:var(--accent);border-radius:99px;padding:1px 9px;font-size:12px;margin:0 4px 4px 0}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+button.btn,.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:7px;padding:7px 13px;font:inherit;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+button.ghost.danger{color:var(--bad)}
+button.ghost.on{background:var(--soft);color:var(--accent);border-color:var(--accent)}
+.col{min-height:90px;border-radius:10px}
+.card[draggable=true]{cursor:grab}
+.card{transition:box-shadow .15s,transform .15s}
+.card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.bar i{transition:width .4s}
+.leg{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:13px;color:var(--muted)}
+.leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chart-card svg{display:block}
+.rem{margin-bottom:8px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+textarea{min-height:76px;resize:vertical}
+input[type=checkbox]{width:auto}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+label.inline{display:inline-flex;gap:6px;align-items:center;font-weight:400;margin:0 12px 4px 0}
+.hint{font-weight:400;color:var(--muted);font-size:12px}
+dialog{border:1px solid var(--line);border-radius:12px;padding:0;width:min(640px,94vw);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg-body{padding:16px 18px;max-height:78vh;overflow:auto}
+.dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.low i{background:var(--warn)}
+.cols{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));align-items:start}
+.col h4{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.col .card{margin-bottom:8px;padding:10px}
+.check{display:flex;gap:8px;align-items:flex-start;padding:5px 0}
+.empty{color:var(--muted);padding:24px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin:8px 0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Painel de Evidências</h1>
+  <p>Menos incógnita, mais prova: transforme o que você faz em histórias que uma empresa consegue avaliar.</p>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<dialog id="dlg"></dialog>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const KEY = 'painel-carreira.v1';
+const COMP = ['Trabalho em equipe','Resolução de problemas','Comunicação','Aprendizado rápido','Responsabilidade','Qualidade técnica'];
+const META_COMP = 2; // evidências desejadas por competência
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const hoje = () => new Date().toLocaleDateString('sv');
+
+function defaults(){
+  return { evidencias:[], projetos:[], diario:[], rede:[], vagas:[], semana:{}, mes:{}, respostas:{}, meta:{ prazo:'2026-12-31', soneca:{}, backup:'', notif:'' } };
+}
+function load(){
+  try { return norm(JSON.parse(localStorage.getItem(KEY))); }
+  catch(e){ return defaults(); }
+}
+function norm(d){
+  const o = Object.assign(defaults(), d || {});
+  o.meta = Object.assign(defaults().meta, (d && d.meta) || {});
+  return o;
+}
+const addDias = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv'); };
+let db = load();
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch(e){ toast('Não consegui salvar no navegador. Exporte um backup.'); }
+}
+function toast(t){
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+/* ---------- Esquemas das entidades ---------- */
+const ENT = {
+  evidencias: {
+    nome:'Evidências (STAR)', novo:'Nova evidência',
+    intro:'Cada evidência é uma história real, com começo, meio e fim, que responde "como você trabalha?". Escreva curta e específica.',
+    fields:[
+      {k:'titulo', l:'Título da história', t:'text', ph:'Ex.: Destravei a integração que bloqueava o time'},
+      {k:'projeto', l:'Onde aconteceu', t:'text', ph:'Estágio, projeto do curso, projeto pessoal...'},
+      {k:'comp', l:'Que competências ela prova?', t:'multi', opts:COMP},
+      {k:'situacao', l:'Situação', hint:'Qual era o contexto e o problema?', t:'area', ph:'Em 2 ou 3 frases. Quem estava envolvido? O que estava travado?'},
+      {k:'tarefa', l:'Tarefa', hint:'O que era SUA responsabilidade?', t:'area', ph:'Separe o que era do time do que era seu.'},
+      {k:'acao', l:'Ação', hint:'O que VOCÊ fez, passo a passo, e por quê?', t:'area', ph:'Decisões, alternativas que você descartou, com quem conversou, como pediu ajuda.'},
+      {k:'resultado', l:'Resultado', hint:'O que mudou? Número, feedback ou antes/depois', t:'area', ph:'Sem número? Descreva o antes e o depois, ou o feedback que recebeu.'},
+      {k:'aprendizado', l:'O que eu faria diferente', t:'area', ph:'Mostrar autocrítica passa mais confiança que uma história perfeita.'},
+      {k:'privado', l:'Contém informação sigilosa (generalizar antes de contar)', t:'check'}
+    ],
+    sortKey:'titulo'
+  },
+  projetos: {
+    nome:'Projetos', novo:'Novo projeto',
+    intro:'O código sozinho não prova nada. O que prova é você saber explicar o problema, as decisões e os trade-offs.',
+    fields:[
+      {k:'nome', l:'Nome do projeto', t:'text'},
+      {k:'status', l:'Status', t:'select', opts:['Ideia','Em andamento','Publicado','Pausado']},
+      {k:'vis', l:'Visibilidade', t:'select', opts:['Público','Sob sigilo (NDA/ainda não divulgado)']},
+      {k:'stack', l:'Stack', t:'text', ph:'Java, Spring Boot, PostgreSQL, Docker...'},
+      {k:'repo', l:'Link do repositório', t:'text', ph:'https://github.com/...'},
+      {k:'problema', l:'Qual problema ele resolve, e para quem?', t:'area'},
+      {k:'decisoes', l:'Decisões técnicas', hint:'Formato: escolhi X em vez de Y porque Z. O custo foi W.', t:'area', ph:'Ex.: Escolhi PostgreSQL em vez de Mongo porque os dados são relacionais. O custo foi mais migrations.'},
+      {k:'mostra', l:'O que este projeto mostra sobre mim', t:'area', ph:'Raciocínio, organização, testes, tratamento de erros, modelagem...'},
+      {k:'pitch', l:'Pitch de 30 segundos (como eu contaria em entrevista)', t:'area'},
+      {k:'falta', l:'O que ainda falta / próximo passo', t:'area'}
+    ],
+    sortKey:'nome'
+  },
+  diario: {
+    nome:'Diário e posts', novo:'Nova entrada',
+    intro:'Registre o processo sempre que trabalhar. Poste no LinkedIn 1 vez por mês: escolha a melhor entrada do período e transforme em post com conteúdo real.',
+    fields:[
+      {k:'data', l:'Data', t:'date'},
+      {k:'projeto', l:'Projeto', t:'text'},
+      {k:'feito', l:'O que eu fiz', t:'area', ph:'Concreto: "implementei paginação no endpoint X".'},
+      {k:'dif', l:'Onde travei / o que deu errado', t:'area'},
+      {k:'apr', l:'O que aprendi', t:'area'},
+      {k:'prox', l:'Próximo passo', t:'text'},
+      {k:'privado', l:'Projeto sob sigilo (não publicar detalhes)', t:'check'},
+      {k:'postado', l:'Já virou post/compartilhamento', t:'check'}
+    ],
+    sortKey:'data', desc:true
+  },
+  rede: {
+    nome:'Rede', novo:'Novo contato',
+    intro:'Rede é relacionamento contínuo. Registre o que você trocou com cada pessoa e qual é o próximo gesto, de preferência algo útil para ela.',
+    fields:[
+      {k:'nome', l:'Nome', t:'text'},
+      {k:'onde', l:'Empresa / papel', t:'text'},
+      {k:'como', l:'Como nos conhecemos', t:'text', ph:'Evento, comentário num post, colega de estágio...'},
+      {k:'status', l:'Relação', t:'select', opts:['Novo contato','Conversando','Relação ativa']},
+      {k:'ultimo', l:'Último contato', t:'date'},
+      {k:'valor', l:'O que já troquei com a pessoa', hint:'Perguntas, ajuda, material enviado, feedback', t:'area'},
+      {k:'prox', l:'Próximo gesto', t:'text', ph:'Ex.: mandar o repositório que ela comentou e pedir uma opinião específica'}
+    ],
+    sortKey:'ultimo', desc:true
+  },
+  vagas: {
+    nome:'Vagas', novo:'Nova vaga',
+    intro:'Para cada vaga, escolha antes quais evidências você usaria. Se faltar evidência, isso vira tarefa.',
+    group:'status',
+    fields:[
+      {k:'empresa', l:'Empresa', t:'text'},
+      {k:'cargo', l:'Cargo', t:'text', ph:'Estágio / Júnior Backend Java...'},
+      {k:'status', l:'Etapa', t:'select', opts:['Interesse','Aplicada','Triagem','Entrevista','Oferta','Encerrada']},
+      {k:'link', l:'Link da vaga', t:'text'},
+      {k:'data', l:'Data da última movimentação', t:'date'},
+      {k:'req', l:'Requisitos que eu ainda não evidencio', t:'area'},
+      {k:'evid', l:'Evidências / projetos que vou usar', t:'area'},
+      {k:'notas', l:'Notas, contato interno, feedback', t:'area'}
+    ],
+    sortKey:'data', desc:true
+  }
+};
+
+/* ---------- Cards ---------- */
+const fld = (l, v) => v ? `<div class="field-lbl">${esc(l)}</div><div class="field-txt">${esc(v)}</div>` : '';
+const star = x => ['situacao','tarefa','acao','resultado'].filter(k => (x[k] || '').trim()).length;
+const diasDesde = d => d ? Math.floor((new Date(hoje()) - new Date(d)) / 864e5) : null;
+
+const CARDS = {
+  evidencias: x => `
+    <h3>${esc(x.titulo || '(sem título)')}</h3>
+    <div class="meta">${esc(x.projeto || '')} · STAR ${star(x)}/4</div>
+    <div>${(x.comp || []).map(c => `<span class="tag">${esc(c)}</span>`).join('')}${x.privado ? '<span class="tag warn">sigiloso</span>' : ''}</div>
+    ${fld('Situação', x.situacao)}${fld('Ação', x.acao)}${fld('Resultado', x.resultado)}${fld('Aprendizado', x.aprendizado)}`,
+  projetos: x => `
+    <h3>${esc(x.nome)}</h3>
+    <div class="meta">${esc(x.status)} · ${esc(x.stack || '')}</div>
+    <div><span class="tag ${x.vis && x.vis.startsWith('Sob') ? 'warn' : ''}">${esc(x.vis || '')}</span>${x.repo ? `<a href="${esc(x.repo)}" target="_blank" rel="noopener">repositório</a>` : ''}</div>
+    ${fld('Problema', x.problema)}${fld('Decisões', x.decisoes)}${fld('Pitch', x.pitch)}${fld('Falta', x.falta)}`,
+  diario: x => `
+    <h3>${esc(x.projeto || 'Entrada')}</h3>
+    <div class="meta">${esc(x.data || '')}</div>
+    <div>${x.privado ? '<span class="tag warn">sigiloso</span>' : ''}${x.postado ? '<span class="tag">já postado</span>' : ''}</div>
+    ${fld('Fiz', x.feito)}${fld('Travei', x.dif)}${fld('Aprendi', x.apr)}${fld('Próximo', x.prox)}
+    <div class="row" style="margin-top:10px"><button class="ghost" data-act="post" data-id="${x.id}">Gerar rascunho de post</button></div>`,
+  rede: x => {
+    const d = diasDesde(x.ultimo);
+    return `
+    <h3>${esc(x.nome)}</h3>
+    <div class="meta">${esc(x.onde || '')} · ${esc(x.status)}</div>
+    <div>${d !== null ? `<span class="tag ${d > 30 ? 'warn' : ''}">há ${d} dia(s) sem contato</span>` : ''}</div>
+    ${fld('Como nos conhecemos', x.como)}${fld('Já troquei', x.valor)}${fld('Próximo gesto', x.prox)}`;
+  },
+  vagas: x => `
+    <h3>${esc(x.empresa)}</h3>
+    <div class="meta">${esc(x.cargo || '')}${x.data ? ' · ' + esc(x.data) : ''}</div>
+    ${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">abrir vaga</a>` : ''}
+    ${fld('Me falta evidenciar', x.req)}${fld('Vou usar', x.evid)}${fld('Notas', x.notas)}`
+};
+
+/* ---------- Navegação ---------- */
+const VIEWS = [
+  ['painel','Painel'],['lembretes','Lembretes'],['evidencias','Evidências'],['projetos','Projetos'],
+  ['diario','Diário e posts'],['rede','Rede'],['vagas','Vagas'],['entrevista','Entrevista'],['evolucao','Evolução']
+];
+let view = (location.hash || '#painel').slice(1);
+if (!VIEWS.some(v => v[0] === view)) view = 'painel';
+const busca = {};
+let filtroComp = '';
+
+function render(){
+  const nl = lembretes().length;
+  document.title = (nl ? `(${nl}) ` : '') + 'Painel de Evidências';
+  $('#nav').innerHTML = VIEWS.map(([k, n]) => `<button class="${k === view ? 'on' : ''}" data-view="${k}">${n}${k === 'lembretes' && nl ? ` (${nl})` : ''}</button>`).join('');
+  const app = $('#app');
+  if (view === 'painel') app.innerHTML = vPainel();
+  else if (view === 'entrevista') app.innerHTML = vEntrevista();
+  else if (view === 'lembretes') app.innerHTML = vLembretes();
+  else if (view === 'evolucao') app.innerHTML = vEvolucao();
+  else app.innerHTML = vLista(view);
+}
+
+/* ---------- Lista genérica ---------- */
+function vLista(key){
+  const E = ENT[key];
+  const q = (busca[key] || '').toLowerCase();
+  let itens = db[key].filter(x => !q || JSON.stringify(x).toLowerCase().includes(q))
+    .filter(x => key !== 'evidencias' || !filtroComp || (x.comp || []).includes(filtroComp));
+  const chips = key === 'evidencias'
+    ? `<div class="row" style="margin-bottom:12px"><button class="ghost ${!filtroComp ? 'on' : ''}" data-chip="">Todas</button>${COMP.map(c => `<button class="ghost ${filtroComp === c ? 'on' : ''}" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : '';
+  itens.sort((a, b) => {
+    const A = String(a[E.sortKey] || ''), B = String(b[E.sortKey] || '');
+    return E.desc ? B.localeCompare(A) : A.localeCompare(B);
+  });
+  const cardHtml = x => `<div class="card" ${E.group ? `draggable="true" data-drag="${x.id}"` : ''}>${CARDS[key](x)}
+    <div class="row" style="margin-top:10px"><button class="ghost" data-act="edit" data-id="${x.id}">Editar</button><button class="ghost danger" data-act="del" data-id="${x.id}">Excluir</button></div></div>`;
+  let corpo;
+  if (!itens.length) corpo = `<div class="empty">Nada por aqui ainda.</div>`;
+  else if (E.group){
+    const stages = E.fields.find(f => f.k === E.group).opts;
+    corpo = `<div class="cols">${stages.map(s => `<div class="col" data-drop="${esc(s)}"><h4>${esc(s)} (${itens.filter(x => x[E.group] === s).length})</h4>${itens.filter(x => x[E.group] === s).map(cardHtml).join('')}</div>`).join('')}</div>`;
+  } else corpo = `<div class="grid">${itens.map(cardHtml).join('')}</div>`;
+  return `
+    <div class="row between"><h2>${E.nome}</h2>
+      <div class="row"><input id="q" placeholder="Buscar..." value="${esc(busca[key] || '')}" style="width:180px"><button class="btn" data-act="new">+ ${E.novo}</button></div></div>
+    <p class="sub">${E.intro}${E.group ? ' Arraste os cartões entre as etapas.' : ''}</p>${chips}${corpo}`;
+}
+
+/* ---------- Formulário genérico ---------- */
+function abrirForm(key, id){
+  const E = ENT[key];
+  const x = id ? db[key].find(i => i.id === id) : {};
+  if (!id){
+    if (key === 'diario') x.data = hoje();
+    if (key === 'vagas') x.data = hoje();
+    if (key === 'rede') x.ultimo = hoje();
+  }
+  const campos = E.fields.map(f => {
+    const v = x[f.k];
+    const lbl = f.t === 'check' ? '' : `<label>${esc(f.l)} ${f.hint ? `<span class="hint">· ${esc(f.hint)}</span>` : ''}</label>`;
+    if (f.t === 'area') return lbl + `<textarea name="${f.k}" placeholder="${esc(f.ph || '')}">${esc(v || '')}</textarea>`;
+    if (f.t === 'select') return lbl + `<select name="${f.k}">${f.opts.map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+    if (f.t === 'multi') return lbl + f.opts.map(o => `<label class="inline"><input type="checkbox" name="${f.k}" value="${esc(o)}" ${(v || []).includes(o) ? 'checked' : ''}> ${esc(o)}</label>`).join('');
+    if (f.t === 'check') return `<label class="inline" style="margin-top:12px"><input type="checkbox" name="${f.k}" ${v ? 'checked' : ''}> ${esc(f.l)}</label><br>`;
+    return lbl + `<input type="${f.t === 'date' ? 'date' : 'text'}" name="${f.k}" value="${esc(v || '')}" placeholder="${esc(f.ph || '')}">`;
+  }).join('');
+  const dlg = $('#dlg');
+  dlg.innerHTML = `<form id="f"><div class="dlg-body"><h2>${id ? 'Editar' : E.novo}</h2>${campos}</div>
+    <div class="dlg-foot"><button type="button" class="ghost" data-close>Cancelar</button><button class="btn">Salvar</button></div></form>`;
+  dlg.showModal();
+  $('#f').onsubmit = ev => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const novo = { id: id || uid(), criado: x.criado || hoje() };
+    E.fields.forEach(f => {
+      if (f.t === 'multi') novo[f.k] = fd.getAll(f.k);
+      else if (f.t === 'check') novo[f.k] = fd.has(f.k);
+      else novo[f.k] = (fd.get(f.k) || '').toString().trim();
+    });
+    const nomeCampo = E.fields[0].k;
+    if (!novo[nomeCampo] && key !== 'diario'){ toast('Preencha o primeiro campo.'); return; }
+    if (id) db[key] = db[key].map(i => i.id === id ? novo : i); else db[key].push(novo);
+    save(); dlg.close(); render(); toast('Salvo.');
+  };
+}
+
+/* ---------- Gerador de rascunho de post ---------- */
+const TPL = {
+  'Travei e destravei': x => juntar([
+    `Travei nisso${x.projeto ? ' no projeto ' + x.projeto : ''}: ${x.dif || '[descreva o problema]'}`,
+    x.feito && `O que eu fiz: ${x.feito}`,
+    x.apr && `O que aprendi: ${x.apr}`,
+    'Se você já passou por isso, como resolveu?'
+  ]),
+  'Aprendizado direto': x => juntar([
+    x.apr && `Aprendizado de hoje: ${x.apr}`,
+    x.feito && `Contexto: ${x.feito}`,
+    x.dif && `O que deu trabalho: ${x.dif}`,
+    x.prox && `Próximo passo: ${x.prox}`
+  ]),
+  'Processo da semana': x => juntar([
+    x.feito && `O que construí: ${x.feito}`,
+    x.dif && `A parte difícil: ${x.dif}`,
+    x.apr && `O que fica comigo: ${x.apr}`,
+    'Quer ver como ficou? Comenta que eu mostro.'
+  ])
+};
+const juntar = a => a.filter(Boolean).join('\n\n');
+
+function abrirPost(id){
+  const x = db.diario.find(i => i.id === id);
+  const dlg = $('#dlg');
+  const nomes = Object.keys(TPL);
+  dlg.innerHTML = `<div class="dlg-body"><h2>Rascunho de post</h2>
+    ${x.privado ? '<div class="note">Este projeto está sob sigilo. Generalize: tire nomes, telas e detalhes de negócio, e fale só do aprendizado técnico.</div>' : ''}
+    <label>Formato</label><select id="tpl">${nomes.map(n => `<option>${n}</option>`).join('')}</select>
+    <label>Texto <span class="hint">· reescreva com a sua voz antes de publicar</span></label><textarea id="txt" style="min-height:220px"></textarea>
+    <div class="note">Dica: um post bom tem um problema real, uma decisão sua e uma pergunta ou convite. Se alguém puder responder a ele, melhor.</div></div>
+    <div class="dlg-foot"><button class="ghost" data-close>Fechar</button><button class="ghost" id="marc">Marcar como postado</button><button class="btn" id="cop">Copiar</button></div>`;
+  const gerar = () => { $('#txt').value = TPL[$('#tpl').value](x); };
+  $('#tpl').onchange = gerar; gerar();
+  $('#cop').onclick = () => {
+    const t = $('#txt'); t.select();
+    (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(() => toast('Copiado.'), () => { document.execCommand('copy'); toast('Copiado.'); });
+  };
+  $('#marc').onclick = () => { x.postado = true; x.postadoEm = hoje(); save(); dlg.close(); render(); toast('Marcado como postado.'); };
+  dlg.showModal();
+}
+
+/* ---------- Painel ---------- */
+const SEMANAL = [
+  ['evid','Escrevi ou melhorei 1 evidência (STAR)'],
+  ['diario','Fiz pelo menos 2 entradas no diário'],
+  ['rede','Tive 2 interações de verdade (resposta, ajuda, conversa)'],
+  ['vaga','Mandei 1 candidatura bem escolhida, ou melhorei uma'],
+  ['voz','Respondi 2 perguntas de entrevista em voz alta'],
+  ['codigo','Fiz commits com mensagens claras num projeto']
+];
+function semanaChave(base){
+  const d = base ? new Date(base) : new Date(); const dia = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dia);
+  return d.toLocaleDateString('sv');
+}
+function cobertura(){
+  const r = {}; COMP.forEach(c => r[c] = 0);
+  db.evidencias.forEach(e => { if (star(e) >= 3) (e.comp || []).forEach(c => { if (c in r) r[c]++; }); });
+  return r;
+}
+function vPainel(){
+  const prazo = new Date(db.meta.prazo + 'T23:59:59');
+  const dias = Math.max(0, Math.ceil((prazo - new Date()) / 864e5));
+  const cob = cobertura();
+  const sem = db.semana[semanaChave()] || {};
+  const mesK = hoje().slice(0, 7);
+  const mes = db.mes[mesK] || {};
+  const derivado = db.diario.some(d => (d.postadoEm || '').startsWith(mesK));
+  const postouMes = !!mes.post || derivado;
+  const ultimoPost = db.diario.map(d => d.postadoEm).filter(Boolean).sort().pop();
+  const candidatos = db.diario.filter(d => !d.postado && !d.privado).length;
+  const feitos = SEMANAL.filter(([k]) => sem[k]).length;
+  const lacunas = COMP.filter(c => cob[c] < META_COMP);
+  const respondidas = Object.values(db.respostas).filter(r => r.p).length;
+  const ativas = db.vagas.filter(v => !['Encerrada'].includes(v.status) && v.status !== 'Interesse').length;
+  const frios = db.rede.filter(r => (diasDesde(r.ultimo) ?? 0) > 30).length;
+  return `
+  <div class="row between"><h2>Painel</h2>
+    <div class="row"><span class="sub" style="margin:0">Meta de estar empregada até</span><input type="date" id="prazo" value="${esc(db.meta.prazo)}" style="width:150px"></div></div>
+  <p class="sub">Foco da semana: transformar o que você já faz em prova que outra pessoa consegue avaliar.</p>
+  ${resumoLembretes()}
+  <div class="stats">
+    <div class="card stat"><b>${dias}</b><span>dias até a meta</span></div>
+    <div class="card stat"><b>${db.evidencias.filter(e => star(e) >= 3).length}</b><span>evidências completas</span></div>
+    <div class="card stat"><b>${db.diario.length}</b><span>entradas no diário</span></div>
+    <div class="card stat"><b>${ativas}</b><span>candidaturas em andamento</span></div>
+    <div class="card stat"><b>${respondidas}</b><span>perguntas praticadas em voz alta</span></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>Checklist da semana (${feitos}/${SEMANAL.length})</h3>
+      <div class="meta">Reinicia toda segunda-feira.</div>
+      ${SEMANAL.map(([k, t]) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-sem="${k}" ${sem[k] ? 'checked' : ''}> ${esc(t)}</label>`).join('')}
+      <div class="bar"><i style="width:${feitos / SEMANAL.length * 100}%"></i></div>
+    </div>
+    <div class="card"><h3>Meta do mês: 1 post com processo real</h3>
+      <div class="meta">Qualidade vence frequência. Um post por mês, escolhido entre o que você registrou no diário.</div>
+      <label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-mes="post" ${postouMes ? 'checked' : ''} ${derivado ? 'disabled' : ''}> Publiquei o post deste mês</label>
+      <div class="field-txt" style="margin:8px 0">${ultimoPost ? `Último post: há ${diasDesde(ultimoPost)} dia(s).` : 'Nenhum post registrado ainda.'}\n${candidatos} entrada(s) do diário podem virar post.</div>
+      <button class="ghost" data-view="diario">Abrir diário</button>
+    </div>
+    <div class="card"><h3>Cobertura das competências</h3>
+      <div class="meta">Meta: ${META_COMP} evidências completas (3+ campos STAR) por competência. As empresas pedem isso em qualquer vaga.</div>
+      ${COMP.map(c => `<div style="margin-bottom:8px"><div class="row between"><span>${esc(c)}</span><span class="meta" style="margin:0">${cob[c]}/${META_COMP}</span></div>
+        <div class="bar ${cob[c] < META_COMP ? 'low' : ''}"><i style="width:${Math.min(100, cob[c] / META_COMP * 100)}%"></i></div></div>`).join('')}
+    </div>
+    <div class="card"><h3>Próximas ações sugeridas</h3>
+      <div class="field-txt">${[
+        lacunas.length && `• Faltam evidências de: ${lacunas.join(', ')}.`,
+        !db.projetos.length && '• Cadastre seus projetos e escreva as decisões técnicas de cada um.',
+        db.projetos.some(p => !p.pitch) && '• Escreva o pitch de 30 segundos dos projetos que ainda não têm.',
+        !postouMes && candidatos > 0 && '• Escolha a melhor entrada do diário e publique o post deste mês.',
+        frios && `• ${frios} contato(s) da rede estão há mais de 30 dias sem interação.`,
+        !db.vagas.length && '• Cadastre 3 vagas de interesse e anote os requisitos que você ainda não evidencia.'
+      ].filter(Boolean).join('\n') || 'Tudo em dia. Continue registrando o que você faz.'}</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Backup dos dados</h3>
+    <div class="meta">Seus dados ficam só neste navegador. Exporte de vez em quando para não perder nada.</div>
+    <div class="row"><button class="ghost" data-act="export">Exportar backup (.json)</button><button class="ghost" data-act="import">Importar backup</button><input type="file" id="file" accept=".json" hidden></div>
+  </div>`;
+}
+
+/* ---------- Entrevista ---------- */
+const PERGUNTAS = {
+  'Comportamentais': [
+    'Fale sobre você em 1 minuto.',
+    'Conte uma situação em que você trabalhou em equipe e houve conflito ou discordância.',
+    'Conte um problema difícil que você resolveu. Como você chegou à solução?',
+    'Conte uma vez em que você errou. O que aconteceu e o que mudou depois?',
+    'Como você pede ajuda quando está travada?',
+    'Como você explica algo técnico para quem não é da área?',
+    'Conte algo que você aprendeu rápido porque precisava.',
+    'Por que backend? Por que Java?',
+    'Onde você quer estar daqui a 2 anos?'
+  ],
+  'Técnicas (Java / backend)': [
+    'Explique um projeto seu: problema, arquitetura e decisões.',
+    'Qual a diferença entre uma API REST bem desenhada e uma mal desenhada?',
+    'Como você trata erros e validações em uma API?',
+    'Quando usar índice no banco? Qual o custo?',
+    'O que é uma transação e quando você precisa dela?',
+    'Como você testaria uma regra de negócio? Teste unitário versus integração.',
+    'Explique injeção de dependência e por que ela ajuda.',
+    'Diferença entre List, Set e Map. Quando usar cada um?',
+    'Como você investigaria um endpoint lento?',
+    'O que você já usou de Docker e para quê?'
+  ]
+};
+function vEntrevista(){
+  let n = 0;
+  const blocos = Object.entries(PERGUNTAS).map(([g, qs]) => `<h2 style="margin-top:18px">${g}</h2>
+    <div class="grid">${qs.map(q => {
+      const i = n++, r = db.respostas[i] || {t:'', p:false};
+      return `<div class="card"><h3>${esc(q)}</h3>
+        <label>Esqueleto da resposta <span class="hint">· tópicos, não um texto decorado</span></label>
+        <textarea data-resp="${i}" placeholder="Qual evidência ou projeto eu uso aqui?">${esc(r.t)}</textarea>
+        <label class="inline" style="margin-top:8px"><input type="checkbox" data-voz="${i}" ${r.p ? 'checked' : ''}> Já respondi em voz alta</label></div>`;
+    }).join('')}</div>`).join('');
+  return `<h2>Preparação de entrevista</h2>
+  <p class="sub">Entrevista é principalmente reduzir incerteza. Para cada pergunta, aponte uma evidência concreta e treine falando, não só lendo.</p>${blocos}`;
+}
+
+/* ---------- Lembretes ---------- */
+function estadoPost(){
+  const mesK = hoje().slice(0, 7);
+  const derivado = db.diario.some(d => (d.postadoEm || '').startsWith(mesK));
+  const postou = !!(db.mes[mesK] && db.mes[mesK].post) || derivado;
+  const cand = db.diario.filter(d => !d.postado && !d.privado).length;
+  return { postou, cand };
+}
+function lembretes(){
+  const L = [];
+  const add = (id, prio, txt) => {
+    const ate = db.meta.soneca[id];
+    if (ate && ate > hoje()) return;
+    L.push({ id, prio, txt, view: arguments_view(id) });
+  };
+  const arguments_view = id => id.startsWith('rede') ? 'rede' : id.startsWith('vaga') ? 'vagas'
+    : (id === 'evid' || id === 'inc') ? 'evidencias' : (id === 'diario' || id === 'post') ? 'diario' : 'painel';
+  const t = new Date(), dia = t.getDate(), dow = t.getDay();
+  const ult = a => a.filter(Boolean).sort().pop();
+
+  const ultDiario = ult(db.diario.map(d => d.data));
+  if (!ultDiario){
+    if (db.evidencias.length || db.projetos.length) add('diario', 2, 'Você ainda não registrou nada no diário. Anote o que fez hoje, mesmo que seja pouco.');
+  } else if (diasDesde(ultDiario) >= 4) add('diario', 2, `Faz ${diasDesde(ultDiario)} dias sem registrar no diário. Anote o que fez e onde travou.`);
+
+  const ultEv = ult(db.evidencias.map(e => e.criado));
+  if (!db.evidencias.length) add('evid', 2, 'Escreva sua primeira evidência (STAR). Comece por algo que aconteceu no estágio.');
+  else if (ultEv && diasDesde(ultEv) >= 14) add('evid', 2, `Sua última evidência foi há ${diasDesde(ultEv)} dias. Escreva mais uma história recente.`);
+  const inc = db.evidencias.filter(e => star(e) < 3).length;
+  if (inc) add('inc', 2, `${inc} evidência(s) com menos de 3 campos STAR preenchidos. Complete para contar na cobertura.`);
+
+  const p = estadoPost();
+  if (!p.postou){
+    if (dia >= 20) add('post', 1, `O mês está acabando e o post mensal ainda não saiu (${p.cand} entrada(s) do diário disponíveis).`);
+    else if (dia >= 10 && p.cand > 0) add('post', 2, 'Escolha a melhor entrada do diário para o post deste mês.');
+  }
+
+  db.rede.forEach(r => {
+    const d = diasDesde(r.ultimo);
+    if (d !== null && d > 30) add('rede:' + r.id, 2, `Faz ${d} dias que você não fala com ${r.nome}.${r.prox ? ' Próximo gesto: ' + r.prox : ''}`);
+  });
+  db.vagas.forEach(v => {
+    if (['Aplicada', 'Triagem', 'Entrevista'].includes(v.status)){
+      const d = diasDesde(v.data);
+      if (d !== null && d >= 7) add('vaga:' + v.id, v.status === 'Entrevista' ? 1 : 2, `${v.empresa}: sem movimentação há ${d} dias (${v.status}). Considere um follow-up.`);
+    }
+  });
+
+  const sem = db.semana[semanaChave()] || {};
+  const falt = SEMANAL.filter(([k]) => !sem[k]).length;
+  if ((dow === 5 || dow === 6 || dow === 0) && falt) add('semana', 2, `Faltam ${falt} item(ns) do checklist desta semana.`);
+
+  const total = ['evidencias', 'projetos', 'diario', 'rede', 'vagas'].reduce((a, k) => a + db[k].length, 0);
+  if (total > 0 && (!db.meta.backup || diasDesde(db.meta.backup) >= 14))
+    add('backup', 2, db.meta.backup ? `Seu último backup foi há ${diasDesde(db.meta.backup)} dias. Exporte um novo pelo Painel.` : 'Você ainda não fez backup. Exporte seus dados pelo Painel.');
+
+  return L.sort((a, b) => a.prio - b.prio);
+}
+function resumoLembretes(){
+  const L = lembretes(); if (!L.length) return '';
+  return `<div class="card" style="margin-bottom:14px"><div class="row between"><h3 style="margin:0">Lembretes (${L.length})</h3><button class="ghost" data-view="lembretes">Ver todos</button></div>
+    ${L.slice(0, 3).map(l => `<div class="check">• ${esc(l.txt)}</div>`).join('')}</div>`;
+}
+function vLembretes(){
+  const L = lembretes();
+  const soneca = Object.values(db.meta.soneca).filter(d => d > hoje()).length;
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  const aviso = perm === 'granted' ? 'Ativado. Você recebe um aviso, no máximo uma vez por dia, quando abrir esta página com lembretes pendentes.'
+    : perm === 'denied' ? 'Bloqueado nas configurações do navegador para este site.'
+    : perm === 'unsupported' ? 'Este navegador não oferece avisos.'
+    : 'Receba um aviso do navegador ao abrir a página, quando houver lembretes pendentes.';
+  return `<h2>Lembretes</h2>
+  <p class="sub">Calculados a partir dos seus registros: diário parado, post do mês, contatos esquecidos, vagas sem retorno, checklist e backup.</p>
+  ${L.length ? L.map(l => `<div class="card rem"><div class="row between"><div style="flex:1;min-width:220px">${l.prio === 1 ? '<span class="tag warn">prioridade</span> ' : ''}${esc(l.txt)}</div>
+    <div class="row"><button class="ghost" data-view="${l.view}">Abrir</button><button class="ghost" data-act="snooze" data-id="${esc(l.id)}">Adiar 3 dias</button></div></div></div>`).join('')
+    : '<div class="empty">Nenhum lembrete agora. Tudo em dia.</div>'}
+  <div class="card" style="margin-top:12px"><h3>Avisos do navegador</h3>
+    <div class="meta">${aviso} O aviso só aparece quando a página é aberta; ela não roda em segundo plano. Pode não funcionar abrindo o arquivo direto do computador, e costuma funcionar quando a página é aberta por um endereço https (como o GitHub Pages).</div>
+    <div class="row">${perm === 'default' ? '<button class="btn" data-act="notif">Ativar avisos</button>' : ''}${soneca ? `<button class="ghost" data-act="limpar-soneca">Reativar ${soneca} lembrete(s) adiado(s)</button>` : ''}</div>
+  </div>`;
+}
+function notificar(){
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted' || db.meta.notif === hoje()) return;
+    const n = lembretes().length; if (!n) return;
+    new Notification('Painel de Evidências', { body: `${n} lembrete(s) pendente(s).` });
+    db.meta.notif = hoje(); save();
+  } catch(e){}
+}
+
+/* ---------- Evolução ---------- */
+function vEvolucao(){
+  const meses = [];
+  for (let i = 5; i >= 0; i--){
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+    meses.push({ k: d.toLocaleDateString('sv').slice(0, 7), l: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') });
+  }
+  const S = [
+    ['Evidências', '--c1', k => db.evidencias.filter(x => (x.criado || '').startsWith(k)).length],
+    ['Diário', '--c2', k => db.diario.filter(x => (x.data || '').startsWith(k)).length],
+    ['Posts', '--c3', k => db.diario.filter(x => (x.postadoEm || '').startsWith(k)).length],
+    ['Contatos', '--c4', k => db.rede.filter(x => (x.ultimo || '').startsWith(k)).length],
+    ['Candidaturas', '--c5', k => db.vagas.filter(x => x.status !== 'Interesse' && (x.data || '').startsWith(k)).length]
+  ];
+  const vals = S.map(s => meses.map(m => s[2](m.k)));
+  const max = Math.max(4, ...vals.flat()); const top = max % 2 ? max + 1 : max;
+  const W = 720, H = 270, L = 34, B = 34, T = 12, R = 8, pw = W - L - R, ph = H - B - T, gw = pw / meses.length, bw = gw * 0.84 / S.length;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Atividade por mês">`;
+  [0, top / 2, top].forEach(v => {
+    const y = T + ph - (v / top) * ph;
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
+  });
+  meses.forEach((m, mi) => {
+    const gx = L + mi * gw + gw * 0.08;
+    S.forEach((s, si) => {
+      const v = vals[si][mi], h = (v / top) * ph;
+      svg += `<rect x="${gx + si * bw}" y="${T + ph - h}" width="${bw - 2}" height="${h}" rx="2" fill="var(${s[1]})"><title>${s[0]} em ${esc(m.l)}: ${v}</title></rect>`;
+    });
+    svg += `<text x="${L + mi * gw + gw / 2}" y="${H - 12}" text-anchor="middle" font-size="12" fill="var(--muted)">${esc(m.l)}</text>`;
+  });
+  svg += '</svg>';
+  const legenda = S.map(s => `<span class="leg"><i style="background:var(${s[1]})"></i>${s[0]}</span>`).join('');
+
+  const sem = [];
+  for (let i = 7; i >= 0; i--){
+    const d = new Date(); d.setDate(d.getDate() - 7 * i);
+    const key = semanaChave(d);
+    const feitos = SEMANAL.filter(([k]) => (db.semana[key] || {})[k]).length;
+    sem.push({ l: key.slice(8) + '/' + key.slice(5, 7), pct: feitos / SEMANAL.length * 100, feitos });
+  }
+  const W2 = 720, H2 = 190, ph2 = H2 - 34 - 12, g2 = (W2 - 34 - 8) / sem.length;
+  let svg2 = `<svg viewBox="0 0 ${W2} ${H2}" width="100%" role="img" aria-label="Checklist semanal">`;
+  [0, 50, 100].forEach(v => {
+    const y = 12 + ph2 - (v / 100) * ph2;
+    svg2 += `<line x1="34" x2="${W2 - 8}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="28" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}%</text>`;
+  });
+  sem.forEach((s, i) => {
+    const h = s.pct / 100 * ph2, x = 34 + i * g2 + g2 * 0.2;
+    svg2 += `<rect x="${x}" y="${12 + ph2 - h}" width="${g2 * 0.6}" height="${h}" rx="2" fill="var(--c1)"><title>Semana de ${s.l}: ${s.feitos}/${SEMANAL.length} itens</title></rect>
+      <text x="${34 + i * g2 + g2 / 2}" y="${H2 - 12}" text-anchor="middle" font-size="12" fill="var(--muted)">${s.l}</text>`;
+  });
+  svg2 += '</svg>';
+
+  const vazio = vals.flat().every(v => v === 0);
+  return `<h2>Evolução</h2>
+  <p class="sub">O que você tem produzido ao longo do tempo. Uma curva constante pesa mais, para quem avalia você, do que um pico isolado.</p>
+  ${vazio ? '<div class="note">Os gráficos aparecem conforme você registra. Evidências escritas antes desta atualização não têm data e passam a contar quando você as editar.</div>' : ''}
+  <div class="card chart-card"><h3>Atividade por mês (últimos 6 meses)</h3>
+    <div class="meta">Contatos contam pela data do último contato; candidaturas, pela data da última movimentação.</div>
+    <div style="margin-bottom:6px">${legenda}</div>${svg}</div>
+  <div class="card chart-card" style="margin-top:12px"><h3>Checklist semanal (últimas 8 semanas)</h3>
+    <div class="meta">Percentual de itens concluídos em cada semana, começando na segunda-feira.</div>${svg2}</div>`;
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-view]');
+  if (v){ view = v.dataset.view; location.hash = view; render(); return; }
+  if (e.target.closest('[data-close]')){ $('#dlg').close(); return; }
+  const ch = e.target.closest('[data-chip]');
+  if (ch){ filtroComp = ch.dataset.chip; render(); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  if (act === 'new') abrirForm(view);
+  else if (act === 'edit') abrirForm(view, id);
+  else if (act === 'post') abrirPost(id);
+  else if (act === 'del'){
+    if (confirm('Excluir este item?')){ db[view] = db[view].filter(i => i.id !== id); save(); render(); }
+  }
+  else if (act === 'export'){
+    db.meta.backup = hoje(); save();
+    const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'painel-carreira-' + hoje() + '.json'; a.click(); URL.revokeObjectURL(a.href); render();
+  }
+  else if (act === 'import') $('#file').click();
+  else if (act === 'snooze'){ db.meta.soneca[id] = addDias(3); save(); render(); toast('Adiado por 3 dias.'); }
+  else if (act === 'limpar-soneca'){ db.meta.soneca = {}; save(); render(); }
+  else if (act === 'notif' && 'Notification' in window){
+    Notification.requestPermission().then(() => { render(); notificar(); });
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q'){
+    busca[view] = e.target.value;
+    const pos = e.target.selectionStart; render();
+    const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos);
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.sem){
+    const k = semanaChave(); db.semana[k] = db.semana[k] || {}; db.semana[k][t.dataset.sem] = t.checked; save(); render();
+  } else if (t.dataset.mes){
+    const k = hoje().slice(0, 7); db.mes[k] = db.mes[k] || {}; db.mes[k][t.dataset.mes] = t.checked; save(); render();
+  } else if (t.dataset.resp !== undefined){
+    const i = t.dataset.resp; db.respostas[i] = Object.assign({t:'', p:false}, db.respostas[i], {t:t.value}); save();
+  } else if (t.dataset.voz !== undefined){
+    const i = t.dataset.voz; db.respostas[i] = Object.assign({t:'', p:false}, db.respostas[i], {p:t.checked}); save();
+  } else if (t.id === 'prazo'){
+    if (t.value){ db.meta.prazo = t.value; save(); render(); }
+  } else if (t.id === 'file'){
+    const f = t.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (!confirm('Isso substitui os dados atuais pelos do backup. Continuar?')) return;
+        db = norm(d); save(); render(); toast('Backup importado.');
+      } catch(err){ toast('Arquivo inválido.'); }
+    };
+    rd.readAsText(f);
+  }
+});
+document.addEventListener('dragstart', e => {
+  const c = e.target.closest && e.target.closest('[data-drag]');
+  if (c) e.dataTransfer.setData('text/plain', c.dataset.drag);
+});
+document.addEventListener('dragover', e => { if (e.target.closest && e.target.closest('[data-drop]')) e.preventDefault(); });
+document.addEventListener('drop', e => {
+  const col = e.target.closest && e.target.closest('[data-drop]'); if (!col) return;
+  e.preventDefault();
+  const v = db.vagas.find(i => i.id === e.dataTransfer.getData('text/plain'));
+  if (v && v.status !== col.dataset.drop){
+    v.status = col.dataset.drop; v.data = hoje(); save(); render(); toast('Movida para ' + col.dataset.drop);
+  }
+});
+window.addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  if (VIEWS.some(v => v[0] === h) && h !== view){ view = h; render(); }
+});
+render();
+notificar();
+</script>
+</body>
+</html>
