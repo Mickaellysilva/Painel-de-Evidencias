@@ -86,6 +86,3 @@ Para publicar como página, ative o **GitHub Pages** nas configurações do repo
 - [ ] Testes automatizados para as regras de cobertura, lembretes e cadência de posts
 - [ ] Capturas de tela neste README
 
-## Licença
-
-Defina a licença do repositório (por exemplo, MIT) antes de publicar, ou remova esta seção se preferir deixá-lo sem licença.
